@@ -1,8 +1,11 @@
 ﻿streamlit
-openpyxl
 pandas
 numpy
+plotly
+fpdf
 scipy
 matplotlib
-fpdf
+openpyxl
+xlrd
+zipfile
 pillow
