@@ -75,12 +75,12 @@ def get_base64(file_path):
         return base64.b64encode(f.read()).decode()
 
 # Chemin complet vers l'image (vérifiez le chemin et l'extension)
-image_path = r"IMFD.jpg"
+st.image("IMFD.JPG", caption="Mon image locale", use_column_width=True)
 img_base64 = ""
-if os.path.exists(image_path):
-    img_base64 = get_base64(image_path)
+if os.path.exists(st.image):
+    img_base64 = get_base64(st.image)
 else:
-    st.error(f"L'image n'existe pas : {image_path}")
+    st.error(f"L'image n'existe pas : {st.image}")
 
 # Affichage du header (image avec effet de fondu et titre)
 st.markdown(
