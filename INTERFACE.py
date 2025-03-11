@@ -69,21 +69,16 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# Fonction pour convertir une image en base64
+def get_base64(file_path):
+    with open(file_path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
 # Chemin complet vers l'image (vérifiez le chemin et l'extension)
 image_path = r"C:\Users\cheva\Downloads\IMFD.jpg"
 img_base64 = ""
 if os.path.exists(image_path):
     img_base64 = get_base64(image_path)
-else:
-    st.error(f"L'image n'existe pas : {image_path}")
-    # Affichage dans Streamlit avec mise en page centrée
-    st.markdown(img_html, unsafe_allow_html=True)
-else:
-    st.error(f"L'image n'existe pas : {image_path}")
-
-
-    # Affichage dans Streamlit avec mise en page spécifique
-    st.markdown(img_html, unsafe_allow_html=True)
 else:
     st.error(f"L'image n'existe pas : {image_path}")
 
