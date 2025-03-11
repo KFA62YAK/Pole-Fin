@@ -69,29 +69,31 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Fonction pour convertir une image en base64
-def get_base64(file_path):
-    with open(file_path, "rb") as f:
-        return base64.b64encode(f.read()).decode()
-
 # Fonction pour convertir l'image en Base64
 def get_base64(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode("utf-8")
 
-# Chemin relatif de l'image (dans le même dépôt que le script)
-image_path = "IMFD.jpg"
+# Définir le chemin absolu de l'image (basé sur le répertoire actuel du script)
+current_dir = os.path.dirname(os.path.abspath(__file__))  # Récupère le dossier du script
+image_path = os.path.join(current_dir, "IMFD.jpg")  # Construit le chemin absolu
 
-# Vérifier si l'image existe
+# Vérifier si l'image existe avant de continuer
 if os.path.exists(image_path):
     img_base64 = get_base64(image_path)
 
-    # Générer l'HTML pour afficher l'image en Base64
+    # Générer le HTML pour afficher l'image en Base64
     img_html = f"""
     <div style="display: flex; justify-content: center;">
         <img src="data:image/jpeg;base64,{img_base64}" alt="Image" style="max-width: 100%; border-radius: 10px;">
     </div>
     """
+
+    # Affichage dans Streamlit avec mise en page centrée
+    st.markdown(img_html, unsafe_allow_html=True)
+else:
+    st.error(f"L'image n'existe pas : {image_path}")
+
 
     # Affichage dans Streamlit avec mise en page spécifique
     st.markdown(img_html, unsafe_allow_html=True)
