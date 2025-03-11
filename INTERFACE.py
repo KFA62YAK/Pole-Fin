@@ -74,13 +74,29 @@ def get_base64(file_path):
     with open(file_path, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
-# Chemin complet vers l'image (vérifiez le chemin et l'extension)
-st.image("IMFD.JPG", caption="Mon image locale", use_column_width=True)
-img_base64 = ""
-if os.path.exists(st.image):
-    img_base64 = get_base64(st.image)
+# Fonction pour convertir l'image en Base64
+def get_base64(image_path):
+    with open(image_path, "rb") as img_file:
+        return base64.b64encode(img_file.read()).decode("utf-8")
+
+# Chemin relatif de l'image (dans le même dépôt que le script)
+image_path = "IMFD.jpg"
+
+# Vérifier si l'image existe
+if os.path.exists(image_path):
+    img_base64 = get_base64(image_path)
+
+    # Générer l'HTML pour afficher l'image en Base64
+    img_html = f"""
+    <div style="display: flex; justify-content: center;">
+        <img src="data:image/jpeg;base64,{img_base64}" alt="Image" style="max-width: 100%; border-radius: 10px;">
+    </div>
+    """
+
+    # Affichage dans Streamlit avec mise en page spécifique
+    st.markdown(img_html, unsafe_allow_html=True)
 else:
-    st.error(f"L'image n'existe pas : {st.image}")
+    st.error(f"L'image n'existe pas : {image_path}")
 
 # Affichage du header (image avec effet de fondu et titre)
 st.markdown(
