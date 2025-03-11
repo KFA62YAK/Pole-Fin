@@ -4,6 +4,6 @@ numpy==1.26.0
 plotly==5.15.0
 fpdf==1.7.2
 pillow==9.5.0
-scipy==1.9.3
+scipy==1.15.2
 openpyxl==3.1.2
 xlrd==2.0.1
