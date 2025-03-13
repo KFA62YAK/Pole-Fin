@@ -227,7 +227,7 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
                     # Exporter en PNG avec dimensions d'export (800x600 pixels)
                     fig.write_image(temp_image, scale=2, width=800, height=600)
                     # Ici, au lieu de prendre la hauteur totale de la page, on l'affiche avec x=10, w=270 (l'espace normalement occupé par 2 graphiques)
-                    pdf.image(temp_image, x=10, y=80, w=270, type="PNG")
+                    pdf.image(temp_image, x=10, y=100, w=270, type="PNG")
                     os.remove(temp_image)
                 else:
                     st.error(f"Graphique {graph} non disponible.")
