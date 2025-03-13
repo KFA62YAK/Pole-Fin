@@ -162,7 +162,7 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
 
     # Paramètres pour le portrait
     target_width_mm = 50      # Largeur souhaitée pour le portrait (modifiable)
-    bottom_y_mm = 55          # Coordonnée y (en mm) où doit se trouver le bas du portrait
+    bottom_y_mm = 75          # Coordonnée y (en mm) où doit se trouver le bas du portrait
 
     temp_pdf_path = None
     try:
