@@ -227,11 +227,16 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
                 else:
                     fig = plot_masculine_graph(graph, player_name, constants, player_data, positions)
                 if fig:
-                    fig.update_layout(xaxis_tickangle=45)
+                    # Forcer le fond blanc pour éviter la transparence
+                    fig.update_layout(
+                        xaxis_tickangle=45,
+                        paper_bgcolor='white',
+                        plot_bgcolor='white'
+                    )
                     # Exporter le graphique en PNG dans un fichier temporaire
                     temp_image_png = tempfile.NamedTemporaryFile(delete=False, suffix=".png").name
                     fig.write_image(temp_image_png, scale=2, width=800, height=600)
-                    # Ouvrir l'image PNG avec PIL et la convertir en mode RGB (pour éliminer la transparence)
+                    # Ouvrir l'image PNG et la convertir en mode RGB (pour éliminer l'alpha)
                     im = Image.open(temp_image_png)
                     im = im.convert("RGB")
                     # Sauvegarder l'image convertie en JPEG dans un autre fichier temporaire
@@ -239,6 +244,7 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
                     im.save(temp_image_jpg, format="JPEG")
                     # Insérer l'image JPEG dans le PDF
                     pdf.image(temp_image_jpg, x=x_offsets[i], y=60, w=135, type="JPG")
+                    # Supprimer les fichiers temporaires
                     os.remove(temp_image_png)
                     os.remove(temp_image_jpg)
                 else:
