@@ -212,6 +212,8 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
 
         pdf.ln(10)
 
+        import io
+
         # Insertion des graphiques (2 par page)
         graph_pairs = [selected_graphs[i:i+2] for i in range(0, len(selected_graphs), 2)]
         for graph_pair in graph_pairs:
@@ -227,30 +229,32 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
                 else:
                     fig = plot_masculine_graph(graph, player_name, constants, player_data, positions)
                 if fig:
-                    # Forcer le fond blanc pour éviter la transparence
+                    # Forcer le template blanc pour que les fonds et les couleurs soient fidèles
                     fig.update_layout(
-                        xaxis_tickangle=45,
-                        paper_bgcolor='white',
-                        plot_bgcolor='white'
+                        template="plotly_white",
+                        paper_bgcolor="white",
+                        plot_bgcolor="white",
+                        xaxis_tickangle=45
                     )
-                    # Exporter le graphique en PNG dans un fichier temporaire
-                    temp_image_png = tempfile.NamedTemporaryFile(delete=False, suffix=".png").name
-                    fig.write_image(temp_image_png, scale=2, width=800, height=600)
-                    # Ouvrir l'image PNG et la convertir en mode RGB (pour éliminer l'alpha)
-                    im = Image.open(temp_image_png)
-                    im = im.convert("RGB")
-                    # Sauvegarder l'image convertie en JPEG dans un autre fichier temporaire
+                    # Exporter le graphique sous forme d'image en mémoire avec Kaleido
+                    img_bytes = fig.to_image(format="png", engine="kaleido", scale=2, width=800, height=600)
+                    im = Image.open(io.BytesIO(img_bytes))
+                    # Si l'image comporte un canal alpha, la "composer" sur un fond blanc
+                    if im.mode in ("RGBA", "LA") or (im.mode == "P" and "transparency" in im.info):
+                        background = Image.new("RGB", im.size, (255, 255, 255))
+                        background.paste(im, mask=im.split()[3])
+                        im = background
+                    else:
+                        im = im.convert("RGB")
+                    # Sauvegarder l'image en JPEG dans un fichier temporaire
                     temp_image_jpg = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg").name
-                    im.save(temp_image_jpg, format="JPEG")
+                    im.save(temp_image_jpg, format="JPEG", quality=95)
                     # Insérer l'image JPEG dans le PDF
                     pdf.image(temp_image_jpg, x=x_offsets[i], y=60, w=135, type="JPG")
-                    # Supprimer les fichiers temporaires
-                    os.remove(temp_image_png)
                     os.remove(temp_image_jpg)
                 else:
                     st.error(f"Graphique {graph} non disponible.")
 
-        
         temp_pdf_path = tempfile.NamedTemporaryFile(delete=False, suffix=f"_{player_name}.pdf").name
         pdf.output(temp_pdf_path)
         st.write("PDF généré :", temp_pdf_path)
