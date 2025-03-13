@@ -147,12 +147,9 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
     Génère un rapport PDF en mode paysage avec :
       - Un arrière-plan personnalisé (si fourni)
       - Le titre et les infos du joueur
-      - Un sommaire des graphiques
-      - Le portrait du joueur inséré à un emplacement précis,
-        aligné par le bas.
-    
-    Le portrait est redimensionné à la largeur target_width_mm, et son bord inférieur
-    est aligné à bottom_y_mm (les valeurs sont modifiables).
+      - Le portrait du joueur
+      - Les graphiques sélectionnés, avec le "Diagramme empilé" affiché sur la largeur totale (comme deux graphiques côte à côte)
+        tout en gardant la même hauteur que pour un graphique individuel.
     """
     from PFtest import plot_feminine_graph
     from PMtest import plot_masculine_graph
@@ -161,8 +158,8 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
     from fpdf import FPDF
 
     # Paramètres pour le portrait
-    target_width_mm = 50      # Largeur souhaitée pour le portrait (modifiable)
-    bottom_y_mm = 65          # Coordonnée y (en mm) où doit se trouver le bas du portrait
+    target_width_mm = 50      # Largeur souhaitée pour le portrait
+    bottom_y_mm = 75          # Coordonnée y (en mm) où doit se trouver le bas du portrait
 
     temp_pdf_path = None
     try:
@@ -170,6 +167,7 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
         pdf.set_compression(False)
         pdf.add_page()
 
+        # Arrière-plan et couleur du texte
         if background_image:
             pdf.image(background_image, x=0, y=0, w=297, h=210)
             text_color = get_text_color_from_image(background_image)
@@ -178,6 +176,7 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
         r, g, b = map(int, text_color.split(","))
         pdf.set_text_color(r, g, b)
 
+        # Titre et infos
         pdf.set_font("Arial", style="B", size=20)
         pdf.cell(0, 20, "Rapport de Performance en match", align="C", ln=True)
         pdf.set_font("Arial", size=16)
@@ -186,25 +185,23 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
         pdf.cell(0, 10, f"{player_name} ({player_position})", align="C", ln=True)
         pdf.ln(5)
 
+        # Sommaire
         pdf.set_font("Arial", style="B", size=14)
         pdf.cell(0, 10, "Sommaire :", align="C", ln=True)
         pdf.set_font("Arial", size=12)
         for idx, graph in enumerate(selected_graphs, start=1):
             pdf.cell(0, 8, f"{idx}. {graph}", align="C", ln=True)
 
-        # Récupération et redimensionnement du portrait
+        # Insertion du portrait
         portrait_img, portrait_height_mm = get_player_portrait(player_name, positions, base_folder, target_width_mm)
         if portrait_img is not None:
-            # Pour aligner le bas du portrait à bottom_y_mm, calculer la position y de l'image
             top_y_mm = bottom_y_mm - portrait_height_mm
-            # Sauvegarder l'image redimensionnée dans un fichier temporaire
             buffer = BytesIO()
             portrait_img.save(buffer, format="PNG")
             img_bytes = buffer.getvalue()
             composite_path = tempfile.NamedTemporaryFile(delete=False, suffix=".png").name
             with open(composite_path, "wb") as f:
                 f.write(img_bytes)
-            # Insérer le portrait dans le PDF : x fixe (ici 230 mm), y calculé pour aligner le bas
             pdf.image(composite_path, x=230, y=top_y_mm, w=target_width_mm, type="PNG")
             os.remove(composite_path)
         else:
@@ -212,16 +209,14 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
 
         pdf.ln(10)
 
-        # Insertion des graphiques (2 par page)
-        graph_pairs = [selected_graphs[i:i+2] for i in range(0, len(selected_graphs), 2)]
-        for graph_pair in graph_pairs:
-            pdf.add_page()
-            if background_image:
-                pdf.image(background_image, x=0, y=0, w=297, h=210)
-                r, g, b = map(int, text_color.split(","))
-                pdf.set_text_color(r, g, b)
-            x_offsets = [10, 155]
-            for i, graph in enumerate(graph_pair):
+        # Traitement spécifique pour le "Diagramme empilé"
+        for graph in selected_graphs:
+            if graph == "Diagramme empilé":
+                pdf.add_page()
+                if background_image:
+                    pdf.image(background_image, x=0, y=0, w=297, h=210)
+                    r, g, b = map(int, text_color.split(","))
+                    pdf.set_text_color(r, g, b)
                 if module == "Pôle Féminin":
                     fig = plot_feminine_graph(graph, player_name, constants, player_data, positions)
                 else:
@@ -229,12 +224,39 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
                 if fig:
                     fig.update_layout(xaxis_tickangle=45)
                     temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".png").name
+                    # Exporter en PNG avec dimensions d'export (800x600 pixels)
                     fig.write_image(temp_image, scale=2, width=800, height=600)
-                    pdf.image(temp_image, x=x_offsets[i], y=60, w=135, type="PNG")
+                    # Ici, au lieu de prendre la hauteur totale de la page, on l'affiche avec x=10, w=270 (l'espace normalement occupé par 2 graphiques)
+                    pdf.image(temp_image, x=10, y=60, w=270, type="PNG")
                     os.remove(temp_image)
                 else:
                     st.error(f"Graphique {graph} non disponible.")
-        
+
+        # Traitement des autres graphiques par paire
+        other_graphs = [g for g in selected_graphs if g != "Diagramme empilé"]
+        if other_graphs:
+            graph_pairs = [other_graphs[i:i+2] for i in range(0, len(other_graphs), 2)]
+            for graph_pair in graph_pairs:
+                pdf.add_page()
+                if background_image:
+                    pdf.image(background_image, x=0, y=0, w=297, h=210)
+                    r, g, b = map(int, text_color.split(","))
+                    pdf.set_text_color(r, g, b)
+                x_offsets = [10, 155]
+                for i, graph in enumerate(graph_pair):
+                    if module == "Pôle Féminin":
+                        fig = plot_feminine_graph(graph, player_name, constants, player_data, positions)
+                    else:
+                        fig = plot_masculine_graph(graph, player_name, constants, player_data, positions)
+                    if fig:
+                        fig.update_layout(xaxis_tickangle=45)
+                        temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".png").name
+                        fig.write_image(temp_image, scale=2, width=800, height=600)
+                        pdf.image(temp_image, x=x_offsets[i], y=60, w=135, type="PNG")
+                        os.remove(temp_image)
+                    else:
+                        st.error(f"Graphique {graph} non disponible.")
+
         temp_pdf_path = tempfile.NamedTemporaryFile(delete=False, suffix=f"_{player_name}.pdf").name
         pdf.output(temp_pdf_path)
         st.write("PDF généré :", temp_pdf_path)
@@ -242,7 +264,6 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
     except Exception as e:
         st.error(f"Erreur lors de la génération du rapport PDF : {e}")
         return None
-
 def display_selected_graphs(selected_graphs, player_name, constants, player_data, positions, module):
     """
     Affiche les graphiques sélectionnés de manière interactive en utilisant Plotly.
