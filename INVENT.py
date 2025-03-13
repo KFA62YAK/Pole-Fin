@@ -231,7 +231,7 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
                     # Exporter le graphique en PNG dans un fichier temporaire
                     temp_image_png = tempfile.NamedTemporaryFile(delete=False, suffix=".png").name
                     fig.write_image(temp_image_png, scale=2, width=800, height=600)
-                    # Ouvrir l'image PNG avec PIL et la convertir en RGB pour éliminer la transparence
+                    # Ouvrir l'image PNG avec PIL et la convertir en mode RGB (pour éliminer la transparence)
                     im = Image.open(temp_image_png)
                     im = im.convert("RGB")
                     # Sauvegarder l'image convertie en JPEG dans un autre fichier temporaire
@@ -243,6 +243,7 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
                     os.remove(temp_image_jpg)
                 else:
                     st.error(f"Graphique {graph} non disponible.")
+
         
         temp_pdf_path = tempfile.NamedTemporaryFile(delete=False, suffix=f"_{player_name}.pdf").name
         pdf.output(temp_pdf_path)
