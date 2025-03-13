@@ -142,7 +142,7 @@ def get_player_portrait(player_name, positions, base_folder, target_width_mm):
         new_height_mm = new_height * 25.4 / 96
         return img_resized, new_height_mm
 
-def generate_report_with_background(selected_graphs, player_name, constants, player_data, positions, module, background_image):
+def generate_report_with_background(selected_graphs, player_name, constants, player_data, positions, module, background_image, base_folder):
     """Génère un rapport PDF en mode paysage avec les graphiques sélectionnés et un arrière-plan personnalisé."""
     import os, tempfile
     from fpdf import FPDF
@@ -191,7 +191,7 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
                 pdf.image(background_image, x=0, y=0, w=297, h=210)
             x_offsets = [10, 155]  # Positions horizontales pour deux graphiques
             for i, graph in enumerate(graph_pair):
-                # Récupération du graphique selon le module
+                # Récupération du graphique selon le module choisi
                 if module == "Pôle Féminin":
                     fig = plot_feminine_graph(graph, player_name, constants, player_data, positions)
                 else:
@@ -205,15 +205,15 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
                             plot_bgcolor="white",
                             xaxis_tickangle=45
                         )
-                    # Tenter de formater la date si la méthode existe (méthode typique de matplotlib)
+                    # Tenter de formater la date si la méthode existe (typiquement pour matplotlib)
                     if hasattr(fig, "autofmt_xdate"):
                         fig.autofmt_xdate()
                     temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".png").name
-                    # Si la figure dispose de la méthode savefig (matplotlib), on l'utilise
+                    # Si la figure possède la méthode savefig (matplotlib), l'utiliser
                     if hasattr(fig, "savefig"):
                         fig.savefig(temp_image, bbox_inches="tight")
                     else:
-                        # Sinon, on utilise Plotly write_image avec Kaleido
+                        # Sinon, utiliser Plotly write_image avec Kaleido
                         fig.write_image(temp_image, engine="kaleido", scale=2, width=800, height=600)
                     pdf.image(temp_image, x=x_offsets[i], y=60, w=135)
                     os.remove(temp_image)
