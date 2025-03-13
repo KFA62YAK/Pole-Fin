@@ -210,42 +210,22 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
 
         pdf.ln(10)
 
-        # Insertion des graphiques (2 par page)
-        graph_pairs = [selected_graphs[i:i+2] for i in range(0, len(selected_graphs), 2)]
-        for graph_pair in graph_pairs:
-            pdf.add_page()
-            if background_image:
-                pdf.image(background_image, x=0, y=0, w=297, h=210)
-                r, g, b = map(int, text_color.split(","))
-                pdf.set_text_color(r, g, b)
-            x_offsets = [10, 155]
+            # Générer les graphiques
+            x_offsets = [10, 155]  # Positions horizontales pour deux graphiques
             for i, graph in enumerate(graph_pair):
-                # Récupération du graphique selon le module choisi
                 if module == "Pôle Féminin":
                     fig = plot_feminine_graph(graph, player_name, constants, player_data, positions)
                 else:
                     fig = plot_masculine_graph(graph, player_name, constants, player_data, positions)
-                if fig:
-                    # Forcer le fond blanc et le template pour obtenir le même rendu que dans Plotly
-                    fig.update_layout(
-                        template="plotly_white",
-                        paper_bgcolor="white",
-                        plot_bgcolor="white",
-                        xaxis_tickangle=45
-                    )
-                    # Sauvegarder directement le graphique en PNG via Kaleido
-                    temp_image_png = tempfile.NamedTemporaryFile(delete=False, suffix=".png").name
-                    fig.write_image(temp_image_png, engine="kaleido", scale=2, width=800, height=600)
-                    # Insérer l'image PNG dans le PDF
-                    pdf.image(temp_image_png, x=x_offsets[i], y=60, w=135, type="PNG")
-                    os.remove(temp_image_png)
-                else:
-                    st.error(f"Graphique {graph} non disponible.")
 
-        # Sauvegarde du PDF final
-        temp_pdf_path = tempfile.NamedTemporaryFile(delete=False, suffix=f"_{player_name}.pdf").name
+                if fig:
+                    temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".png").name
+                    fig.autofmt_xdate ()
+                    fig.savefig(temp_image, bbox_inches="tight")
+                    pdf.image(temp_image, x=x_offsets[i], y=60, w=135)  # Ajusté pour deux graphiques
+                    os.remove(temp_image)
+
         pdf.output(temp_pdf_path)
-        st.write("PDF généré :", temp_pdf_path)
         return temp_pdf_path
     except Exception as e:
         st.error(f"Erreur lors de la génération du rapport PDF : {e}")
