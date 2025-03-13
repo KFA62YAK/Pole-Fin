@@ -148,8 +148,8 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
       - Un arrière-plan personnalisé (si fourni)
       - Le titre et les infos du joueur
       - Le portrait du joueur
-      - Les graphiques sélectionnés, avec le "Diagramme empilé" affiché sur la largeur totale (comme deux graphiques côte à côte)
-        tout en gardant la même hauteur que pour un graphique individuel.
+      - Les graphiques sélectionnés, avec le "Diagramme empilé" affiché sur toute la largeur allouée à deux graphiques
+        tout en conservant la hauteur d'un graphique individuel.
     """
     from PFtest import plot_feminine_graph
     from PMtest import plot_masculine_graph
@@ -158,8 +158,8 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
     from fpdf import FPDF
 
     # Paramètres pour le portrait
-    target_width_mm = 50      # Largeur souhaitée pour le portrait
-    bottom_y_mm = 75          # Coordonnée y (en mm) où doit se trouver le bas du portrait
+    target_width_mm = 60      # Largeur souhaitée pour le portrait
+    bottom_y_mm = 65          # Coordonnée y (en mm) où doit se trouver le bas du portrait
 
     temp_pdf_path = None
     try:
@@ -176,7 +176,7 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
         r, g, b = map(int, text_color.split(","))
         pdf.set_text_color(r, g, b)
 
-        # Titre et infos
+        # Titre et informations
         pdf.set_font("Arial", style="B", size=20)
         pdf.cell(0, 20, "Rapport de Performance en match", align="C", ln=True)
         pdf.set_font("Arial", size=16)
@@ -192,7 +192,7 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
         for idx, graph in enumerate(selected_graphs, start=1):
             pdf.cell(0, 8, f"{idx}. {graph}", align="C", ln=True)
 
-        # Insertion du portrait
+        # Insertion du portrait du joueur
         portrait_img, portrait_height_mm = get_player_portrait(player_name, positions, base_folder, target_width_mm)
         if portrait_img is not None:
             top_y_mm = bottom_y_mm - portrait_height_mm
@@ -222,12 +222,17 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
                 else:
                     fig = plot_masculine_graph(graph, player_name, constants, player_data, positions)
                 if fig:
-                    fig.update_layout(xaxis_tickangle=45)
+                    fig.update_layout(
+                        xaxis_tickangle=45,
+                        margin=dict(l=20, r=20, t=50, b=20),  # Marges ajustées pour éviter de couper le graphique
+                        template="plotly_white",
+                        paper_bgcolor="white",
+                        plot_bgcolor="white"
+                    )
                     temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".png").name
-                    # Exporter en PNG avec dimensions d'export (800x600 pixels)
                     fig.write_image(temp_image, scale=2, width=800, height=600)
-                    # Ici, au lieu de prendre la hauteur totale de la page, on l'affiche avec x=10, w=270 (l'espace normalement occupé par 2 graphiques)
-                    pdf.image(temp_image, x=10, y=100, w=270, type="PNG")
+                    # Utiliser la largeur normalement allouée à deux graphiques (environ 270 mm)
+                    pdf.image(temp_image, x=10, y=60, w=270, type="PNG")
                     os.remove(temp_image)
                 else:
                     st.error(f"Graphique {graph} non disponible.")
@@ -264,6 +269,7 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
     except Exception as e:
         st.error(f"Erreur lors de la génération du rapport PDF : {e}")
         return None
+
 def display_selected_graphs(selected_graphs, player_name, constants, player_data, positions, module):
     """
     Affiche les graphiques sélectionnés de manière interactive en utilisant Plotly.
