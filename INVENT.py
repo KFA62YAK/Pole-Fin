@@ -161,8 +161,8 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
     from fpdf import FPDF
 
     # Paramètres pour le portrait
-    target_width_mm = 60      # Largeur souhaitée pour le portrait (modifiable)
-    bottom_y_mm = 65          # Coordonnée y (en mm) où doit se trouver le bas du portrait
+    target_width_mm = 50      # Largeur souhaitée pour le portrait (modifiable)
+    bottom_y_mm = 55          # Coordonnée y (en mm) où doit se trouver le bas du portrait
 
     temp_pdf_path = None
     try:
