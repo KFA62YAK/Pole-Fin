@@ -228,10 +228,19 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
                     fig = plot_masculine_graph(graph, player_name, constants, player_data, positions)
                 if fig:
                     fig.update_layout(xaxis_tickangle=45)
-                    temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".png").name
-                    fig.write_image(temp_image, scale=2, width=800, height=600)
-                    pdf.image(temp_image, x=x_offsets[i], y=60, w=135, type="PNG")
-                    os.remove(temp_image)
+                    # Exporter le graphique en PNG dans un fichier temporaire
+                    temp_image_png = tempfile.NamedTemporaryFile(delete=False, suffix=".png").name
+                    fig.write_image(temp_image_png, scale=2, width=800, height=600)
+                    # Ouvrir l'image PNG avec PIL et la convertir en RGB pour éliminer la transparence
+                    im = Image.open(temp_image_png)
+                    im = im.convert("RGB")
+                    # Sauvegarder l'image convertie en JPEG dans un autre fichier temporaire
+                    temp_image_jpg = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg").name
+                    im.save(temp_image_jpg, format="JPEG")
+                    # Insérer l'image JPEG dans le PDF
+                    pdf.image(temp_image_jpg, x=x_offsets[i], y=60, w=135, type="JPG")
+                    os.remove(temp_image_png)
+                    os.remove(temp_image_jpg)
                 else:
                     st.error(f"Graphique {graph} non disponible.")
         
