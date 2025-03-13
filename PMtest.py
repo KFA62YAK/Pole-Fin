@@ -53,10 +53,17 @@ def compute_additional_columns(player_data):
 
 def plot_masculine_graph(selected_graph, player_name, constants, data, positions):
     """Affiche les graphiques masculins pour un joueur donné en utilisant Plotly Express."""
+    import pandas as pd
+    import plotly.express as px
+    import plotly.graph_objects as go
+    import numpy as np
+
     player_data = data[data["Joueur"] == player_name].copy()
+    # Calcul des colonnes additionnelles
+    from PMtest import compute_additional_columns
     player_data = compute_additional_columns(player_data)
 
-    # Diagramme empilé
+    # Cas du diagramme empilé
     if selected_graph == "Diagramme empilé":
         if all(col in data.columns for col in ["Distance16%", "Distance20%", "Distance%"]):
             sessions = data["Session Title"].fillna("Session inconnue")
@@ -73,7 +80,7 @@ def plot_masculine_graph(selected_graph, player_name, constants, data, positions
 
                 # Préparation des données pour la barre constante
                 df_constante = pd.DataFrame({
-                    'Session': ['Constante U15']*3,
+                    'Session': ['Constante U15'] * 3,
                     'Type': ['Distance>20', 'Distance>16', 'Distance<16'],
                     'Valeur': [constant20, constant16, constant]
                 })
@@ -85,26 +92,43 @@ def plot_masculine_graph(selected_graph, player_name, constants, data, positions
                     'Distance>16': distance16,
                     'Distance<16': distance
                 })
-                df_sessions_long = df_sessions.melt(id_vars="Session", value_vars=['Distance>20', 'Distance>16', 'Distance<16'], 
-                                                      var_name='Type', value_name='Valeur')
+                df_sessions_long = df_sessions.melt(
+                    id_vars="Session", 
+                    value_vars=['Distance>20', 'Distance>16', 'Distance<16'],
+                    var_name='Type', 
+                    value_name='Valeur'
+                )
                 df_combined = pd.concat([df_constante, df_sessions_long], ignore_index=True)
 
-                fig = px.bar(df_combined, x='Session', y='Valeur', color='Type', barmode='stack', text_auto=True,
-                             title="Répartition de courses en %")
-                fig.update_layout(xaxis_title="Match", yaxis_title="Distance (%)", xaxis_tickangle=45)
+                # Correction : forcer la séquence de couleurs et le fond blanc
+                fig = px.bar(
+                    df_combined,
+                    x='Session',
+                    y='Valeur',
+                    color='Type',
+                    barmode='stack',
+                    text_auto=True,
+                    title="Répartition de courses en %",
+                    color_discrete_sequence=["#1f77b4", "#ff7f0e", "#2ca02c"]
+                )
+                fig.update_layout(
+                    xaxis_title="Match",
+                    yaxis_title="Distance (%)",
+                    xaxis_tickangle=45,
+                    template="plotly_white",
+                    paper_bgcolor="white",
+                    plot_bgcolor="white"
+                )
                 return fig
         else:
-            st.warning("Les colonnes Distance16%, Distance20%, et Distance% sont manquantes dans les données.")
+            st.warning("Les colonnes Distance16%, Distance20% et Distance% sont manquantes dans les données.")
             return None
 
-    # Cas des graphiques en courbe (avec régression et ligne constante)
+    # Cas des graphiques en courbe
     if selected_graph in player_data.columns:
         player_data[selected_graph] = player_data[selected_graph].fillna(0)
 
-        # Création d'une figure vide pour pouvoir ajouter des traces avec leurs légendes
         fig = go.Figure()
-
-        # Trace principale : données du joueur
         fig.add_trace(go.Scatter(
             x=player_data["Session Title"],
             y=player_data[selected_graph],
@@ -113,13 +137,10 @@ def plot_masculine_graph(selected_graph, player_name, constants, data, positions
             line=dict(color="blue")
         ))
 
-        # Calcul de la régression linéaire
         x = np.arange(len(player_data["Session Title"]))
         y = player_data[selected_graph].values
         slope, intercept = np.polyfit(x, y, 1)
         regression_line = slope * x + intercept
-
-        # Trace de la régression linéaire
         fig.add_trace(go.Scatter(
             x=player_data["Session Title"],
             y=regression_line,
@@ -127,8 +148,6 @@ def plot_masculine_graph(selected_graph, player_name, constants, data, positions
             name="Progression générale",
             line=dict(color="navy")
         ))
-
-        # Trace de la ligne constante si disponible
         position_row = positions[positions["Joueur"] == player_name]
         if not position_row.empty:
             position = position_row.iloc[0]["Poste"]
