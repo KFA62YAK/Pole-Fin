@@ -213,7 +213,6 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
         pdf.ln(10)
 
         import io
-
         # Insertion des graphiques (2 par page)
         graph_pairs = [selected_graphs[i:i+2] for i in range(0, len(selected_graphs), 2)]
         for graph_pair in graph_pairs:
@@ -229,29 +228,29 @@ def generate_report_with_background(selected_graphs, player_name, constants, pla
                 else:
                     fig = plot_masculine_graph(graph, player_name, constants, player_data, positions)
                 if fig:
-                    # Forcer le template blanc pour que les fonds et les couleurs soient fidèles
+                    # Forcer l'utilisation d'un template blanc pour obtenir le fond blanc
                     fig.update_layout(
                         template="plotly_white",
                         paper_bgcolor="white",
                         plot_bgcolor="white",
                         xaxis_tickangle=45
                     )
-                    # Exporter le graphique sous forme d'image en mémoire avec Kaleido
+                    # Exporter l'image avec Kaleido en mémoire
                     img_bytes = fig.to_image(format="png", engine="kaleido", scale=2, width=800, height=600)
                     im = Image.open(io.BytesIO(img_bytes))
-                    # Si l'image comporte un canal alpha, la "composer" sur un fond blanc
+                    # Si l'image contient de la transparence, la composer sur un fond blanc
                     if im.mode in ("RGBA", "LA") or (im.mode == "P" and "transparency" in im.info):
                         background = Image.new("RGB", im.size, (255, 255, 255))
                         background.paste(im, mask=im.split()[3])
                         im = background
                     else:
                         im = im.convert("RGB")
-                    # Sauvegarder l'image en JPEG dans un fichier temporaire
-                    temp_image_jpg = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg").name
-                    im.save(temp_image_jpg, format="JPEG", quality=95)
-                    # Insérer l'image JPEG dans le PDF
-                    pdf.image(temp_image_jpg, x=x_offsets[i], y=60, w=135, type="JPG")
-                    os.remove(temp_image_jpg)
+                    # Sauvegarder l'image résultante en PNG (sans transparence)
+                    temp_image_png = tempfile.NamedTemporaryFile(delete=False, suffix=".png").name
+                    im.save(temp_image_png, format="PNG")
+                    # Insérer l'image PNG dans le PDF
+                    pdf.image(temp_image_png, x=x_offsets[i], y=60, w=135, type="PNG")
+                    os.remove(temp_image_png)
                 else:
                     st.error(f"Graphique {graph} non disponible.")
 
