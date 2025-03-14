@@ -235,7 +235,7 @@ with st.sidebar.expander("⚙️ Configuration des graphiques", expanded=True):
             "Distance>23kmh/min",
             "Distance > 19kmh/min",
             "Nb Accélération > 2m/s²/min",
-            "Nb Décélérations > 2m/s²/min"
+            "Nb Décélération > 2m/s²/min"
         ]
     else:
         general_graphs = [
