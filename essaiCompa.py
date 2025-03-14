@@ -107,7 +107,7 @@ def load_zip(key_prefix):
 def display_player_photo(selected_player, positions, base_folder):
     """
     Récupère et affiche le portrait du joueur à partir du dossier "Trombi".
-    L'image est affichée au format PNG avec transparence.
+    L'image est affichée au format PNG avec transparence et avec une taille réduite.
     """
     if "Trombi" not in positions.columns:
         st.error("La colonne 'Trombi' n'existe pas dans la feuille Poste.")
@@ -135,7 +135,7 @@ def display_player_photo(selected_player, positions, base_folder):
     base64_image = base64.b64encode(image_bytes).decode("utf-8")
     html = f'''
     <div style="text-align: center;">
-        <img src="data:image/png;base64,{base64_image}" alt="Portrait de {selected_player}" style="max-width:100%; height:auto;">
+        <img src="data:image/png;base64,{base64_image}" alt="Portrait de {selected_player}" style="max-width:150px; height:auto;">
     </div>
     '''
     st.markdown(html, unsafe_allow_html=True)
@@ -168,13 +168,13 @@ def compute_additional_columns(player_data):
     return player_data
 
 # -----------------------------
-# Fonction d'affichage pour la comparaison en colonnes
+# Nouvelle fonction pour récupérer les infos d'un joueur
 # -----------------------------
-def display_column_comparison(key_prefix, shared_graphs):
-    # Charge le fichier ZIP pour la colonne
+def get_player_info(key_prefix):
     data, positions, constante_data, base_folder = load_zip(key_prefix)
+    info = None
     if data is not None:
-        st.write(f"Sélectionner un joueur ({key_prefix}):")
+        st.write(f"Sélectionner un joueur ({key_prefix}) :")
         players = data["Joueur"].drop_duplicates().tolist()
         selected_player = st.selectbox(
             f"Sélectionner un joueur/joueuse ({key_prefix})",
@@ -188,9 +188,8 @@ def display_column_comparison(key_prefix, shared_graphs):
             constants = get_masculine_constants(constante_data)
         if selected_player:
             st.markdown(f"**{selected_player}**")
-            # Afficher le portrait du joueur sous le selectbox
+            # Affichage du portrait avec taille réduite
             display_player_photo(selected_player, positions, base_folder)
-            st.write(f"Graphiques pour {selected_player} ({global_module}):")
             filter_matches = st.checkbox(
                 f"Afficher les matchs < 3900 secondes ({key_prefix})",
                 value=False,
@@ -201,21 +200,19 @@ def display_column_comparison(key_prefix, shared_graphs):
                 player_data = filter_duration(player_data)
             if player_data.empty:
                 st.warning(f"Aucune donnée après filtrage ({key_prefix}).")
-            else:
-                if shared_graphs:
-                    st.write(f"**Graphiques sélectionnés ({key_prefix}):**")
-                    for graph in shared_graphs:
-                        st.subheader(f"Graphique : {graph}")
-                        if global_module == "Pôle Féminin":
-                            fig = plot_feminine_graph(graph, selected_player, constants, player_data, positions)
-                        else:
-                            fig = plot_masculine_graph(graph, selected_player, constants, player_data, positions)
-                        if fig:
-                            st.plotly_chart(fig, key=f"{key_prefix}_{selected_player}_{graph}")
-                        else:
-                            st.error(f"Graphique {graph} non disponible.")
+            info = {
+                "selected_player": selected_player,
+                "data": data,
+                "positions": positions,
+                "constante_data": constante_data,
+                "base_folder": base_folder,
+                "player_data": player_data,
+                "constants": constants,
+                "global_module": global_module
+            }
     else:
         st.warning(f"Veuillez charger un fichier ZIP pour {key_prefix}.")
+    return info
 
 # -----------------------------
 # Configuration globale dans la sidebar
@@ -264,12 +261,40 @@ with st.sidebar.expander("⚙️ Configuration des graphiques", expanded=True):
 shared_graphs = shared_general_graphs + shared_per_min_graphs
 
 # -----------------------------
-# Affichage en deux colonnes pour la comparaison
+# Affichage en deux colonnes pour la sélection et le portrait
 # -----------------------------
 col1, col2 = st.columns(2)
 with col1:
     st.header("Joueur 1")
-    display_column_comparison("col1", shared_graphs)
+    player1_info = get_player_info("col1")
 with col2:
     st.header("Joueur 2")
-    display_column_comparison("col2", shared_graphs)
+    player2_info = get_player_info("col2")
+
+# -----------------------------
+# Affichage des graphiques alignés horizontalement pour chaque sélection
+# -----------------------------
+if player1_info and player2_info:
+    st.write("### Comparaison des graphiques")
+    for graph in shared_graphs:
+        st.write(f"**Graphique : {graph}**")
+        graph_col1, graph_col2 = st.columns(2)
+        with graph_col1:
+            if player1_info["global_module"] == "Pôle Féminin":
+                fig1 = plot_feminine_graph(graph, player1_info["selected_player"], player1_info["constants"], player1_info["player_data"], player1_info["positions"])
+            else:
+                fig1 = plot_masculine_graph(graph, player1_info["selected_player"], player1_info["constants"], player1_info["player_data"], player1_info["positions"])
+            if fig1:
+                st.plotly_chart(fig1, use_container_width=True)
+            else:
+                st.error(f"Graphique {graph} non disponible pour {player1_info['selected_player']}.")
+        with graph_col2:
+            if player2_info["global_module"] == "Pôle Féminin":
+                fig2 = plot_feminine_graph(graph, player2_info["selected_player"], player2_info["constants"], player2_info["player_data"], player2_info["positions"])
+            else:
+                fig2 = plot_masculine_graph(graph, player2_info["selected_player"], player2_info["constants"], player2_info["player_data"], player2_info["positions"])
+            if fig2:
+                st.plotly_chart(fig2, use_container_width=True)
+            else:
+                st.error(f"Graphique {graph} non disponible pour {player2_info['selected_player']}.")
+
