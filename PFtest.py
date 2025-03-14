@@ -51,12 +51,8 @@ def compute_additional_columns(player_data):
 
 def plot_feminine_graph(selected_graph, player_name, constants, data, positions):
     """Affiche les graphiques féminins pour un joueur donné en utilisant Plotly."""
-    import pandas as pd
-    import plotly.express as px
-    import plotly.graph_objects as go
-
-    # Filtrer les données du joueur
     player_data = data[data["Joueur"] == player_name].copy()
+    player_data = compute_additional_columns(player_data)
 
     # Cas du diagramme empilé
     if selected_graph == "Diagramme empilé":
@@ -87,43 +83,27 @@ def plot_feminine_graph(selected_graph, player_name, constants, data, positions)
                     'Distance19%': distance19,
                     'Distance%': distance
                 })
-                df_sessions_long = df_sessions.melt(
-                    id_vars="Session", 
-                    value_vars=['Distance23%', 'Distance19%', 'Distance%'],
-                    var_name='Type', 
-                    value_name='Valeur'
-                )
+                df_sessions_long = df_sessions.melt(id_vars="Session", 
+                                                    value_vars=['Distance23%', 'Distance19%', 'Distance%'],
+                                                    var_name='Type', value_name='Valeur')
                 df_combined = pd.concat([df_constante, df_sessions_long], ignore_index=True)
 
-                # Correction : forcer la séquence de couleurs et le fond blanc
-                fig = px.bar(
-                    df_combined,
-                    x="Session",
-                    y="Valeur",
-                    color="Type",
-                    barmode="stack",
-                    text_auto=True,
-                    title="Répartition des Distances de course en %",
-                    color_discrete_sequence=["#1f77b4", "#ff7f0e", "#2ca02c"]
-                )
-                fig.update_layout(
-                    xaxis_title="Match",
-                    yaxis_title="Distance (%)",
-                    xaxis_tickangle=45,
-                    template="plotly_white",
-                    paper_bgcolor="white",
-                    plot_bgcolor="white"
-                )
+                fig = px.bar(df_combined, x='Session', y='Valeur', color='Type', barmode='stack', text_auto=True,
+                             title="Répartition des Distances de course en %")
+                fig.update_layout(xaxis_title="Match", yaxis_title="Distance (%)", xaxis_tickangle=45)
                 return fig
         else:
             st.warning("Les colonnes Distance23%, Distance19% et Distance% sont manquantes dans les données.")
             return None
 
-    # Autres cas de graphiques (par courbe)
+    # Cas des graphiques en courbe
     if selected_graph in player_data.columns:
         player_data[selected_graph] = player_data[selected_graph].fillna(0)
 
+        # Créer une figure avec go.Figure pour pouvoir ajouter des légendes à chaque trace
         fig = go.Figure()
+
+        # Trace principale : données
         fig.add_trace(go.Scatter(
             x=player_data["Session Title"],
             y=player_data[selected_graph],
@@ -131,24 +111,28 @@ def plot_feminine_graph(selected_graph, player_name, constants, data, positions)
             name=selected_graph,
             line=dict(color="blue")
         ))
+
         # Calcul de la régression linéaire
-        import numpy as np
         x = np.arange(len(player_data["Session Title"]))
         y = player_data[selected_graph].values
         slope, intercept = np.polyfit(x, y, 1)
         regression_line = slope * x + intercept
+
+        # Trace de la régression linéaire
         fig.add_trace(go.Scatter(
             x=player_data["Session Title"],
             y=regression_line,
             mode="lines",
             name="Progression générale",
-            line=dict(color="darkgreen")
+            line=dict(color="navy")
         ))
+
         position_row = positions[positions["Joueur"] == player_name]
         if not position_row.empty:
             position = position_row.iloc[0]["Poste"]
             constant_val = constants.get(selected_graph, {}).get(position)
             if constant_val is not None:
+                # Trace de la ligne constante pour la norme U17
                 fig.add_trace(go.Scatter(
                     x=[player_data["Session Title"].iloc[0], player_data["Session Title"].iloc[-1]],
                     y=[constant_val, constant_val],
