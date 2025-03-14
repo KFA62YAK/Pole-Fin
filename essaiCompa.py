@@ -285,7 +285,7 @@ if player1_info and player2_info:
             else:
                 fig1 = plot_masculine_graph(graph, player1_info["selected_player"], player1_info["constants"], player1_info["player_data"], player1_info["positions"])
             if fig1:
-                st.plotly_chart(fig1, use_container_width=True)
+                st.plotly_chart(fig1, use_container_width=True, key=f"{player1_info['selected_player']}_{graph}_col1")
             else:
                 st.error(f"Graphique {graph} non disponible pour {player1_info['selected_player']}.")
         with graph_col2:
@@ -294,7 +294,6 @@ if player1_info and player2_info:
             else:
                 fig2 = plot_masculine_graph(graph, player2_info["selected_player"], player2_info["constants"], player2_info["player_data"], player2_info["positions"])
             if fig2:
-                st.plotly_chart(fig2, use_container_width=True)
+                st.plotly_chart(fig2, use_container_width=True, key=f"{player2_info['selected_player']}_{graph}_col2")
             else:
                 st.error(f"Graphique {graph} non disponible pour {player2_info['selected_player']}.")
-
