@@ -135,7 +135,7 @@ def display_player_photo(selected_player, positions, base_folder):
     base64_image = base64.b64encode(image_bytes).decode("utf-8")
     html = f'''
     <div style="text-align: center;">
-        <img src="data:image/png;base64,{base64_image}" alt="Portrait de {selected_player}" style="max-width:150px; height:auto;">
+        <img src="data:image/png;base64,{base64_image}" alt="Portrait de {selected_player}" style="max-width:250px; height:auto;">
     </div>
     '''
     st.markdown(html, unsafe_allow_html=True)
