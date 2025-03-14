@@ -275,7 +275,6 @@ with col2:
 # Affichage des graphiques alignés horizontalement pour chaque sélection
 # -----------------------------
 if player1_info and player2_info:
-    st.write("### Comparaison des graphiques")
     for graph in shared_graphs:
         st.write(f"**Graphique : {graph}**")
         graph_col1, graph_col2 = st.columns(2)
