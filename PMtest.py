@@ -146,7 +146,7 @@ def plot_masculine_graph(selected_graph, player_name, constants, data, positions
             y=regression_line,
             mode="lines",
             name="Progression générale",
-            line=dict(color="navy")
+            line=dict(color="limegreen")
         ))
         position_row = positions[positions["Joueur"] == player_name]
         if not position_row.empty:
