@@ -83,12 +83,15 @@ def plot_feminine_graph(selected_graph, player_name, constants, data, positions)
                     'Distance19%': distance19,
                     'Distance%': distance
                 })
-                df_sessions_long = df_sessions.melt(id_vars="Session", 
-                                                    value_vars=['Distance23%', 'Distance19%', 'Distance%'],
-                                                    var_name='Type', value_name='Valeur')
+                df_sessions_long = df_sessions.melt(
+                    id_vars="Session", 
+                    value_vars=['Distance23%', 'Distance19%', 'Distance%'],
+                    var_name='Type', 
+                    value_name='Valeur'
+                )
                 df_combined = pd.concat([df_constante, df_sessions_long], ignore_index=True)
 
-                # Correction : forcer la séquence de couleurs et le fond blanc
+                # Création du diagramme en barre avec la même gestion des couleurs que pour le pôle masculin
                 fig = px.bar(
                     df_combined,
                     x='Session',
@@ -96,7 +99,7 @@ def plot_feminine_graph(selected_graph, player_name, constants, data, positions)
                     color='Type',
                     barmode='stack',
                     text_auto=True,
-                    title="Répartition de courses en %",
+                    title="Répartition des Distances de course en %",
                     color_discrete_sequence=["#1f77b4", "#ff7f0e", "#2ca02c"]
                 )
                 fig.update_layout(
@@ -140,7 +143,7 @@ def plot_feminine_graph(selected_graph, player_name, constants, data, positions)
             y=regression_line,
             mode="lines",
             name="Progression générale",
-            line=dict(color="navy")
+            line=dict(color="darkgreen")
         ))
 
         position_row = positions[positions["Joueur"] == player_name]
@@ -259,3 +262,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
