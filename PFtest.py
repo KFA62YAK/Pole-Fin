@@ -88,9 +88,25 @@ def plot_feminine_graph(selected_graph, player_name, constants, data, positions)
                                                     var_name='Type', value_name='Valeur')
                 df_combined = pd.concat([df_constante, df_sessions_long], ignore_index=True)
 
-                fig = px.bar(df_combined, x='Session', y='Valeur', color='Type', barmode='stack', text_auto=True,
-                             title="Répartition des Distances de course en %")
-                fig.update_layout(xaxis_title="Match", yaxis_title="Distance (%)", xaxis_tickangle=45)
+                # Correction : forcer la séquence de couleurs et le fond blanc
+                fig = px.bar(
+                    df_combined,
+                    x='Session',
+                    y='Valeur',
+                    color='Type',
+                    barmode='stack',
+                    text_auto=True,
+                    title="Répartition de courses en %",
+                    color_discrete_sequence=["#1f77b4", "#ff7f0e", "#2ca02c"]
+                )
+                fig.update_layout(
+                    xaxis_title="Match",
+                    yaxis_title="Distance (%)",
+                    xaxis_tickangle=45,
+                    template="plotly_white",
+                    paper_bgcolor="white",
+                    plot_bgcolor="white"
+                )
                 return fig
         else:
             st.warning("Les colonnes Distance23%, Distance19% et Distance% sont manquantes dans les données.")
@@ -124,7 +140,7 @@ def plot_feminine_graph(selected_graph, player_name, constants, data, positions)
             y=regression_line,
             mode="lines",
             name="Progression générale",
-            line=dict(color="darkgreen")
+            line=dict(color="navy")
         ))
 
         position_row = positions[positions["Joueur"] == player_name]
